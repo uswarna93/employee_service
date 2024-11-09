@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class EmployeeDetailsResponseDto {
-private EmployeeDto empDetails;
-private List<EmployeeSkillDto> skillSet;
+public class EmployeeDetailsResponseDTO {
+private EmployeeDTO empDetails;
+private List<EmployeeSkillDTO> skillSet;
 }

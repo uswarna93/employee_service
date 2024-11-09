@@ -1,4 +1,4 @@
-package com.demo_emp_service.exceptionhandling;
+package com.demo_emp_service.exceptions;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;

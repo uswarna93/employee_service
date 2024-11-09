@@ -11,9 +11,9 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode
 @Data
-public class EmployeePayLoadDto {
+public class EmployeePayLoadDTO {
     private String empId;
     private String firstName;
     private  String lastName;
-    private List<EmployeeSkillDto> skills;
+    private List<EmployeeSkillDTO> skills;
 }
