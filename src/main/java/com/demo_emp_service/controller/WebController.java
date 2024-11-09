@@ -1,5 +1,8 @@
 package com.demo_emp_service.controller;
 
+import com.demo_emp_service.exceptionhandling.EmployeeAlreadyExistsException;
+import com.demo_emp_service.exceptionhandling.EmployeeNotFoundException;
+import com.demo_emp_service.exceptionhandling.EmployeeSkillAlreadyExistsException;
 import com.demo_emp_service.model.EmployeeDetailsResponseDto;
 import com.demo_emp_service.model.EmployeeDto;
 import com.demo_emp_service.model.EmployeeSkillDto;
@@ -11,7 +14,6 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,12 +53,16 @@ public class WebController {
     public ResponseEntity<?> addEmployees(@Valid @RequestBody EmployeeDto employeeDto){
         logger.info("Begin saving employee: {} ",employeeDto);
         try {
-            employeeDetailsService.saveEmployees(employeeDto);
-        } catch (Exception e){
+             employeeDetailsService.saveEmployees(employeeDto);
+        }catch (EmployeeAlreadyExistsException employeeAlreadyExistsException){
+            logger.error("Employee already exists{} ",employeeAlreadyExistsException.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(employeeAlreadyExistsException.getMessage());
+        }
+        catch (Exception e){
             logger.error("Exception {} while saving employee:",e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("employee was not saved:");
         }
-        return ResponseEntity.status(HttpStatusCode.valueOf(200)).body("employee saved");
+        return ResponseEntity.status(HttpStatus.CREATED).body("Employee created "+employeeDto);
     }
     @Operation(summary = "save Employee Skills ", description = "It saves Employee skills into Data Base")
     @ApiResponses(value = {
@@ -68,11 +74,17 @@ public class WebController {
         logger.info("Begin saving EmployeeSkills: {}",employeeSkillDto);
         try {
             employeeDetailsService.saveSkills(employeeSkillDto);
-        } catch (Exception e){
-            logger.error("Exception {} while saving EmployeeSkills:",e.getMessage());
+        }catch (EmployeeSkillAlreadyExistsException skillAlreadyExistsException) {
+            logger.error("EmployeeSkills already exists: {}", skillAlreadyExistsException.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(skillAlreadyExistsException.getMessage());
+        }catch (EmployeeNotFoundException notFoundException){
+                logger.error("Employee Not found with EmpId "+notFoundException.getMessage());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFoundException.getMessage());
+        }catch (Exception e){
+            logger.error("Exception: {}",e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("EmployeeSkills not saved:");
         }
-        return ResponseEntity.status(HttpStatusCode.valueOf(200)).body("EmployeeSkills saved");
+        return ResponseEntity.status(HttpStatus.CREATED).body("EmployeeSkills saved");
    }
     @Operation(summary = "Retrieves EmployeeDetails with EmpId", description = "It retrieves employee details from Data Base")
     @ApiResponses(value = {

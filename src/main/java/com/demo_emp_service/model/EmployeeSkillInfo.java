@@ -20,4 +20,6 @@ public class EmployeeSkillInfo {
 
     @NotNull(message = "skillLevel cannot be null")
     private String skillLevel;
+
+    private String empId;
 }

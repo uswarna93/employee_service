@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 public interface EmployeeDetailsService {
 
     String sendMessage(String msg);
-    void saveEmployees(EmployeeDto employeeDto);
-    void saveSkills(EmployeeSkillDto employeeSkillDto);
+    void saveEmployees(EmployeeDto employeeDto) throws Exception;
+    void saveSkills(EmployeeSkillDto employeeSkillDto) throws Exception;
     EmployeeDetailsResponseDto getEmployeeDetailsByEmpId(String empId);
 }
