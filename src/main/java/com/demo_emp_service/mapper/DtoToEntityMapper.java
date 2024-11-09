@@ -17,6 +17,7 @@ public class DtoToEntityMapper {
         employeeSkillEntity.setSkillId(employeeSkillDto.getSkillId());
         employeeSkillEntity.setSkillLevel(employeeSkillDto.getSkillLevel());
         employeeSkillEntity.setSkillName(employeeSkillDto.getSkillName());
+        employeeSkillEntity.setEmpId(employeeSkillEntity.getEmpId());
         return employeeSkillEntity;
     }
 

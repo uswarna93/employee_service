@@ -2,6 +2,9 @@ package com.demo_emp_service.service;
 
 import com.demo_emp_service.entity.EmployeeEntity;
 import com.demo_emp_service.entity.EmployeeSkillEntity;
+import com.demo_emp_service.exceptionhandling.EmployeeAlreadyExistsException;
+import com.demo_emp_service.exceptionhandling.EmployeeNotFoundException;
+import com.demo_emp_service.exceptionhandling.EmployeeSkillAlreadyExistsException;
 import com.demo_emp_service.mapper.DtoToEntityMapper;
 import com.demo_emp_service.mapper.EntityToDtoMapper;
 import com.demo_emp_service.model.*;
@@ -119,16 +122,61 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
 
     public void saveEmployees(EmployeeDto employeeDto) {
         logger.info("Begin saveEmp() {} :", employeeDto);
-        EmployeeEntity employeeEntity = dtoToEntityMapper
-                .convertDtoToEmployeeEntity(employeeDto);
-        employeeRepository.save(employeeEntity);
+        try {
+            EmployeeEntity employeeEntity = dtoToEntityMapper
+                    .convertDtoToEmployeeEntity(employeeDto);
+            if (!isEmployeeExists(employeeEntity)){
+                employeeRepository.save(employeeEntity);
+            }else {
+                throw new EmployeeAlreadyExistsException
+                        ("Employee Already exists with empId "+employeeDto.getEmpId());
+            }
+        }catch (EmployeeAlreadyExistsException e){
+            throw new EmployeeAlreadyExistsException(e.getMessage());
+        } catch (Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
-    public void saveSkills(EmployeeSkillDto employeeSkill) {
-        logger.info("Begin saving Skills: {}", employeeSkill);
-        EmployeeSkillEntity employeeSkillEntity = dtoToEntityMapper
-                .convertDtoToEmployeeSkillEntity(employeeSkill);
-        employeeSkillRepository.save(employeeSkillEntity);
+    private boolean isEmployeeExists(EmployeeEntity employeeEntity) {
+        boolean result = employeeRepository.
+                existsByEmpIdAndFirstNameIgnoreCaseAndLastNameIgnoreCase
+                        (employeeEntity.getEmpId(), employeeEntity.getFirstName(), employeeEntity.getLastName());
+
+        return result;
+    }
+
+    public void saveSkills(EmployeeSkillDto employeeSkillDto) throws Exception {
+        logger.info("Begin saving Skills: {}", employeeSkillDto);
+        try {
+            EmployeeSkillEntity employeeSkillEntity = dtoToEntityMapper
+                    .convertDtoToEmployeeSkillEntity(employeeSkillDto);
+            if(employeeRepository.existsById(employeeSkillDto.getEmpId())) {
+                if (!isSkillExists(employeeSkillEntity))
+                {
+                    employeeSkillRepository.save(employeeSkillEntity);
+                }else{
+                    throw new EmployeeSkillAlreadyExistsException("Employee Skill already exists");
+                }
+            }else {
+                throw new EmployeeNotFoundException
+                        ("No Employee Found with empId "+employeeSkillDto.getEmpId());
+            }
+            }catch (EmployeeSkillAlreadyExistsException e){
+            throw new EmployeeSkillAlreadyExistsException(e.getMessage());
+        }catch (EmployeeNotFoundException e){
+            throw new EmployeeNotFoundException(e.getMessage());
+        }catch (Exception e){
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    private boolean isSkillExists(EmployeeSkillEntity employeeSkillEntity) {
+        boolean result= employeeSkillRepository.
+                existsByEmpIdAndSkillIdAndSkillNameIgnoreCaseAndSkillLevelIgnoreCase
+                        (employeeSkillEntity.getEmpId(), employeeSkillEntity.getSkillId(),
+                                employeeSkillEntity.getSkillName(), employeeSkillEntity.getSkillLevel());
+        return result;
     }
 
     public EmployeeDetailsResponseDto getEmployeeDetailsByEmpId(String empId) {
