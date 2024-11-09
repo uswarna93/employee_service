@@ -1,11 +1,12 @@
 package com.demo_emp_service.controller;
 
-import com.demo_emp_service.exceptionhandling.EmployeeAlreadyExistsException;
-import com.demo_emp_service.exceptionhandling.EmployeeNotFoundException;
-import com.demo_emp_service.exceptionhandling.EmployeeSkillAlreadyExistsException;
-import com.demo_emp_service.model.EmployeeDetailsResponseDto;
-import com.demo_emp_service.model.EmployeeDto;
-import com.demo_emp_service.model.EmployeeSkillDto;
+import com.demo_emp_service.exceptions.EmployeeAlreadyExistsException;
+import com.demo_emp_service.exceptions.EmployeeNotFoundException;
+import com.demo_emp_service.exceptions.EmployeeSkillAlreadyExistsException;
+import com.demo_emp_service.exceptions.SkillAlreadyExistsException;
+import com.demo_emp_service.model.EmployeeDetailsResponseDTO;
+import com.demo_emp_service.model.EmployeeDTO;
+import com.demo_emp_service.model.EmployeeSkillInfoDTO;
 import com.demo_emp_service.service.EmployeeDetailsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -47,10 +48,9 @@ public class WebController {
     @Operation(summary = "Save Employees", description = "saves Employees into Data Base")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully saved to database"),
-            @ApiResponse(responseCode = "500", description = "Internal server Exception - Unable to save Employee")
-    })
+            @ApiResponse(responseCode = "500", description = "Internal server Exception - Unable to save Employee")})
     @PostMapping("/saveEmployees")
-    public ResponseEntity<?> addEmployees(@Valid @RequestBody EmployeeDto employeeDto){
+    public ResponseEntity<?> addEmployees(@Valid @RequestBody EmployeeDTO employeeDto){
         logger.info("Begin saving employee: {} ",employeeDto);
         try {
              employeeDetailsService.saveEmployees(employeeDto);
@@ -67,34 +67,35 @@ public class WebController {
     @Operation(summary = "save Employee Skills ", description = "It saves Employee skills into Data Base")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully saved to database"),
-            @ApiResponse(responseCode = "500", description = "Internal server Exception - Unable to save Employee Skills")
-    })
+            @ApiResponse(responseCode = "500", description = "Internal server Exception - Unable to save Employee Skills")})
     @PostMapping("/saveEmployeeSkills")
-    public ResponseEntity<?> addEmployeeSkills(@Valid @RequestBody EmployeeSkillDto employeeSkillDto){
-        logger.info("Begin saving EmployeeSkills: {}",employeeSkillDto);
+    public ResponseEntity<?> addEmployeeSkills(@Valid @RequestBody EmployeeSkillInfoDTO employeeSkillInfo){
+        logger.info("Begin saving EmployeeSkills: {}",employeeSkillInfo);
         try {
-            employeeDetailsService.saveSkills(employeeSkillDto);
+            employeeDetailsService.saveSkills(employeeSkillInfo);
         }catch (EmployeeSkillAlreadyExistsException skillAlreadyExistsException) {
             logger.error("EmployeeSkills already exists: {}", skillAlreadyExistsException.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(skillAlreadyExistsException.getMessage());
         }catch (EmployeeNotFoundException notFoundException){
                 logger.error("Employee Not found with EmpId "+notFoundException.getMessage());
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFoundException.getMessage());
+        }catch (SkillAlreadyExistsException e){
+            logger.error("Exception: {}",e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }catch (Exception e){
             logger.error("Exception: {}",e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("EmployeeSkills not saved:");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("EmployeeSkills not saved:"+e.getMessage());
         }
         return ResponseEntity.status(HttpStatus.CREATED).body("EmployeeSkills saved");
    }
     @Operation(summary = "Retrieves EmployeeDetails with EmpId", description = "It retrieves employee details from Data Base")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved from database"),
-            @ApiResponse(responseCode = "404", description = "Not found - Employee Details not found with empId")
-    })
+            @ApiResponse(responseCode = "404", description = "Not found - Employee Details not found with empId")})
     @GetMapping("/getEmployeeDetailsByEmpId/{empId}")
     public ResponseEntity<?> getEmployeeDetailsByEmpId(@Valid @PathVariable String empId){
         logger.info("Getting EmployeeInfo with empId {}",empId);
-        EmployeeDetailsResponseDto employeeDetailsResponseDto;
+        EmployeeDetailsResponseDTO employeeDetailsResponseDto;
         try {
             employeeDetailsResponseDto = employeeDetailsService
                     .getEmployeeDetailsByEmpId(empId);

@@ -1,16 +1,16 @@
 package com.demo_emp_service.service;
 
-import com.demo_emp_service.model.EmployeeDetailsResponseDto;
-import com.demo_emp_service.model.EmployeeDto;
-import com.demo_emp_service.model.EmployeeSkillDto;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.demo_emp_service.model.EmployeeDetailsResponseDTO;
+import com.demo_emp_service.model.EmployeeDTO;
+import com.demo_emp_service.model.EmployeeSkillInfoDTO;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
 @Service
 public interface EmployeeDetailsService {
 
     String sendMessage(String msg);
-    void saveEmployees(EmployeeDto employeeDto) throws Exception;
-    void saveSkills(EmployeeSkillDto employeeSkillDto) throws Exception;
-    EmployeeDetailsResponseDto getEmployeeDetailsByEmpId(String empId);
+    void saveEmployees(EmployeeDTO employeeDto) throws Exception;
+    void saveSkills(@Valid EmployeeSkillInfoDTO employeeSkillInfo) throws Exception;
+    EmployeeDetailsResponseDTO getEmployeeDetailsByEmpId(String empId);
 }

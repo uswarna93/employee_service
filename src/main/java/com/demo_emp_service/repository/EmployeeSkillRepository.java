@@ -11,6 +11,9 @@ import java.util.List;
 public interface EmployeeSkillRepository extends JpaRepository<EmployeeSkillEntity, EmployeeId> {
     List<EmployeeSkillEntity> getEmployeeSkillEntitiesByEmpId(String empId);
 
-    boolean existsByEmpIdAndSkillIdAndSkillNameIgnoreCaseAndSkillLevelIgnoreCase
-            (String empId, String skillId, String skillName, String skillLevel);
+    boolean existsByEmpIdAndSkillIdAndSkillNameIgnoreCaseAndSkillLevelIgnoreCase(
+            String empId, String skillId, String skillName, String skillLevel);
+
+    boolean existsByEmpIdAndSkillNameIgnoreCase(
+            String empId, String skillName);
 }

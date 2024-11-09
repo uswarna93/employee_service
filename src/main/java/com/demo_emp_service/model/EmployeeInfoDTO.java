@@ -10,10 +10,10 @@ import java.util.List;
 @ToString
 @EqualsAndHashCode
 @Data
-public class EmployeeInfo {
+public class EmployeeInfoDTO {
 
     private String empId;
     private String firstName;
     private  String lastName;
-    private List<EmployeeSkillInfo> employeeSkills;
+    private List<EmployeeSkillInfoDTO> employeeSkills;
 }

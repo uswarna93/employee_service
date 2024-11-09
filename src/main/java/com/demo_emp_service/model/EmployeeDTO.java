@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @EqualsAndHashCode
 @Data
-public class EmployeeDto {
+public class EmployeeDTO {
     @NotNull(message = "employeeId cannot be null")
     private String empId;
 

@@ -2,9 +2,10 @@ package com.demo_emp_service.service;
 
 import com.demo_emp_service.entity.EmployeeEntity;
 import com.demo_emp_service.entity.EmployeeSkillEntity;
-import com.demo_emp_service.exceptionhandling.EmployeeAlreadyExistsException;
-import com.demo_emp_service.exceptionhandling.EmployeeNotFoundException;
-import com.demo_emp_service.exceptionhandling.EmployeeSkillAlreadyExistsException;
+import com.demo_emp_service.exceptions.EmployeeAlreadyExistsException;
+import com.demo_emp_service.exceptions.EmployeeNotFoundException;
+import com.demo_emp_service.exceptions.EmployeeSkillAlreadyExistsException;
+import com.demo_emp_service.exceptions.SkillAlreadyExistsException;
 import com.demo_emp_service.mapper.DtoToEntityMapper;
 import com.demo_emp_service.mapper.EntityToDtoMapper;
 import com.demo_emp_service.model.*;
@@ -61,9 +62,9 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
     }
 
     @KafkaListener(topics = "EmployeeInfoTopic", groupId = "EmployeeGroup")
-    public EmployeePayLoadDto consumeMessage(String payLoad) {
+    public EmployeePayLoadDTO consumeMessage(String payLoad) {
         logger.info("payLoad {} Received in EmployeeGroup from EmployeeInfoTopic ", payLoad);
-        EmployeePayLoadDto employeePayLoad = new EmployeePayLoadDto();
+        EmployeePayLoadDTO employeePayLoad = new EmployeePayLoadDTO();
         try {
             if (!StringUtils.isEmpty(payLoad)) {
                 employeePayLoad = processMessage(payLoad);
@@ -72,11 +73,11 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
                     EmployeeEntity employeeEntity = payLoadToEmployeeEntityMapper(employeePayLoad);
                     employeeRepository.save(employeeEntity);
                     logger.info("EmployeeEntity saved");
-                    List<EmployeeSkillDto> employeeSkillDtoList = employeePayLoad.getSkills();
+                    List<EmployeeSkillDTO> employeeSkillDtoList = employeePayLoad.getSkills();
                     logger.info("employeeSkillDtoList {}",employeeSkillDtoList);
                     String empId = employeeEntity.getEmpId();
                      logger.info("emoId {}",empId);
-                    for (EmployeeSkillDto employeeSkillDto:employeeSkillDtoList)
+                    for (EmployeeSkillDTO employeeSkillDto:employeeSkillDtoList)
                     {
                         EmployeeSkillEntity employeeSkillEntity = dtoToEntityMapper
                                 .convertSkillPayLoadDtoToEmployeeSkillEntity(employeeSkillDto,empId);
@@ -93,7 +94,7 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
         return employeePayLoad;
     }
 
-    private EmployeeEntity payLoadToEmployeeEntityMapper(EmployeePayLoadDto employeePayLoad) {
+    private EmployeeEntity payLoadToEmployeeEntityMapper(EmployeePayLoadDTO employeePayLoad) {
         EmployeeEntity employeeEntity = new EmployeeEntity();
         logger.info("Begin converting PayLoad to Employee");
         employeeEntity.setEmpId(employeePayLoad.getEmpId());
@@ -101,7 +102,7 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
         employeeEntity.setLastName(employeePayLoad.getLastName());
         return employeeEntity;
     }
-    private boolean isEmployeePayLoadValid(EmployeePayLoadDto employeePayLoad) {
+    private boolean isEmployeePayLoadValid(EmployeePayLoadDTO employeePayLoad) {
         logger.error("Begin checking isEmployeePayLoadValid ");
         try {
             if (!StringUtils.isEmpty(employeePayLoad.getEmpId())) {
@@ -113,14 +114,14 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
         }
         return false;
     }
-    private EmployeePayLoadDto processMessage(String message) throws JsonProcessingException {
+    private EmployeePayLoadDTO processMessage(String message) throws JsonProcessingException {
         logger.info("Begin processMessage");
-        EmployeePayLoadDto employeePayLoad = objectMapper.readValue(message, EmployeePayLoadDto.class);
+        EmployeePayLoadDTO employeePayLoad = objectMapper.readValue(message, EmployeePayLoadDTO.class);
         logger.info(employeePayLoad+"empPayLoad");
         return employeePayLoad;
     }
 
-    public void saveEmployees(EmployeeDto employeeDto) {
+    public void saveEmployees(EmployeeDTO employeeDto) throws RuntimeException {
         logger.info("Begin saveEmp() {} :", employeeDto);
         try {
             EmployeeEntity employeeEntity = dtoToEntityMapper
@@ -133,8 +134,6 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
             }
         }catch (EmployeeAlreadyExistsException e){
             throw new EmployeeAlreadyExistsException(e.getMessage());
-        } catch (Exception e){
-            throw new RuntimeException(e.getMessage());
         }
     }
 
@@ -146,29 +145,34 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
         return result;
     }
 
-    public void saveSkills(EmployeeSkillDto employeeSkillDto) throws Exception {
-        logger.info("Begin saving Skills: {}", employeeSkillDto);
+    public void saveSkills(EmployeeSkillInfoDTO employeeSkillInfo) throws RuntimeException {
+        logger.info("Begin saving Skills: {}", employeeSkillInfo);
         try {
             EmployeeSkillEntity employeeSkillEntity = dtoToEntityMapper
-                    .convertDtoToEmployeeSkillEntity(employeeSkillDto);
-            if(employeeRepository.existsById(employeeSkillDto.getEmpId())) {
-                if (!isSkillExists(employeeSkillEntity))
-                {
-                    employeeSkillRepository.save(employeeSkillEntity);
-                }else{
-                    throw new EmployeeSkillAlreadyExistsException("Employee Skill already exists");
-                }
-            }else {
-                throw new EmployeeNotFoundException
-                        ("No Employee Found with empId "+employeeSkillDto.getEmpId());
-            }
+                    .convertDtoToEmployeeSkillEntity(employeeSkillInfo);
+            if(employeeRepository.existsById(employeeSkillEntity.getEmpId())) {
+                if (!isSkillExists(employeeSkillEntity)) {
+                    if(!isSkillNameExists(employeeSkillEntity)){
+                        employeeSkillRepository.save(employeeSkillEntity);
+                    }else {throw new SkillAlreadyExistsException(
+                            "skillName already exists for empId: "+employeeSkillEntity.getEmpId());}
+                }else{throw new EmployeeSkillAlreadyExistsException("Employee Skill already exists");}
+            }else {throw new EmployeeNotFoundException
+                        ("No Employee Found with empId "+employeeSkillEntity.getEmpId());}
             }catch (EmployeeSkillAlreadyExistsException e){
             throw new EmployeeSkillAlreadyExistsException(e.getMessage());
         }catch (EmployeeNotFoundException e){
             throw new EmployeeNotFoundException(e.getMessage());
-        }catch (Exception e){
-            throw new Exception(e.getMessage());
+        }catch (SkillAlreadyExistsException e){
+            throw new SkillAlreadyExistsException(e.getMessage());
         }
+    }
+
+    private boolean isSkillNameExists(EmployeeSkillEntity employeeSkillEntity) {
+        return employeeSkillRepository
+                .existsByEmpIdAndSkillNameIgnoreCase(
+                        employeeSkillEntity.getEmpId(),
+                        employeeSkillEntity.getSkillName());
     }
 
     private boolean isSkillExists(EmployeeSkillEntity employeeSkillEntity) {
@@ -179,17 +183,17 @@ public class EmployeeDetailsServiceImpl implements EmployeeDetailsService {
         return result;
     }
 
-    public EmployeeDetailsResponseDto getEmployeeDetailsByEmpId(String empId) {
+    public EmployeeDetailsResponseDTO getEmployeeDetailsByEmpId(String empId) {
         logger.info("Begin getting Employee with empId: {}", empId);
-        EmployeeDetailsResponseDto employeeDetailsResponseDto = new EmployeeDetailsResponseDto();
+        EmployeeDetailsResponseDTO employeeDetailsResponseDto = new EmployeeDetailsResponseDTO();
         List<EmployeeSkillEntity> employeeSkillEntityList;
-        List<EmployeeSkillDto> employeeSkillDtoList = new ArrayList<>();
+        List<EmployeeSkillDTO> employeeSkillDtoList = new ArrayList<>();
         try {
             Optional<EmployeeEntity> employeeEntityOptional = employeeRepository.findById(empId);
             if (employeeEntityOptional.isPresent()) {
                 EmployeeEntity employeeEntity = employeeEntityOptional.get();
                 // Convert into DTO
-                EmployeeDto employeeDto = entityToDtoMapper.convertEmpEntityToEmpDto(employeeEntity);
+                EmployeeDTO employeeDto = entityToDtoMapper.convertEmpEntityToEmpDto(employeeEntity);
                 employeeDetailsResponseDto.setEmpDetails(employeeDto);
                 employeeSkillEntityList = employeeSkillRepository
                         .getEmployeeSkillEntitiesByEmpId(employeeDto.getEmpId());
