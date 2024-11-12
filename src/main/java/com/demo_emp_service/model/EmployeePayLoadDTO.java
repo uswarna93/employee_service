@@ -15,5 +15,6 @@ public class EmployeePayLoadDTO {
     private String empId;
     private String firstName;
     private  String lastName;
+    private String department;
     private List<EmployeeSkillDTO> skills;
 }

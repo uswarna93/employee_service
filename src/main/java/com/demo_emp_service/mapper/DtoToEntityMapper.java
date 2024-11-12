@@ -28,6 +28,7 @@ public class DtoToEntityMapper {
         employeeEntity.setEmpId(employeeDto.getEmpId());
         employeeEntity.setFirstName(employeeDto.getFirstName());
         employeeEntity.setLastName(employeeDto.getLastName());
+        employeeEntity.setDepartment(employeeDto.getDepartment());
         return employeeEntity;
     }
 

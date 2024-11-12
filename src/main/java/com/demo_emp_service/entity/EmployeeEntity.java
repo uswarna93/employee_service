@@ -12,7 +12,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
-@Table(name = "employees_details", schema = "tenni")
+@Table(name = "employee_details", schema = "tenni")
 public class EmployeeEntity implements Serializable {
 
     @Id
@@ -24,5 +24,8 @@ public class EmployeeEntity implements Serializable {
 
     @Column(name = "last_name")
     private String lastName;
+
+    @Column(name = "department")
+    private String department;
 
 }
