@@ -12,7 +12,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @EqualsAndHashCode
 @ToString
-@IdClass(EmployeeId.class)
+@IdClass(EmployeeSkillId.class)
 @Table(name = "skill_details" , schema = "tenni")
 public class EmployeeSkillEntity implements Serializable {
 

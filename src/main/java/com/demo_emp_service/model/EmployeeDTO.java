@@ -17,6 +17,9 @@ public class EmployeeDTO {
     @NotNull(message = "firstName cannot be null")
     private String firstName;
 
-    @NotNull(message = "lastName cannot be null")
+//    @NotNull(message = "lastName cannot be null")
     private  String lastName;
+
+    @NotNull(message = "department cannot be null")
+    private String department;
 }

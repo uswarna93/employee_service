@@ -9,7 +9,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmployeeId implements Serializable {
+public class EmployeeSkillId implements Serializable {
     private String empId;
-    private String skillId;
+    private int skillId;
 }

@@ -1,17 +1,18 @@
 package com.demo_emp_service.controller;
 
-import com.demo_emp_service.exceptions.EmployeeAlreadyExistsException;
-import com.demo_emp_service.exceptions.EmployeeNotFoundException;
-import com.demo_emp_service.exceptions.EmployeeSkillAlreadyExistsException;
-import com.demo_emp_service.exceptions.SkillAlreadyExistsException;
+import com.demo_emp_service.exceptions.*;
 import com.demo_emp_service.model.EmployeeDetailsResponseDTO;
 import com.demo_emp_service.model.EmployeeDTO;
+import com.demo_emp_service.model.EmployeePayLoadDTO;
 import com.demo_emp_service.model.EmployeeSkillInfoDTO;
 import com.demo_emp_service.service.EmployeeDetailsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -38,13 +39,40 @@ public class WebController {
         logger.info("Begin Producing a message to topic: {} ",msg);
         String result;
        try {
-           result = employeeDetailsService.sendMessage(msg);
-       }catch (Exception exception){
-           logger.error("Exception {} while Producing a message to topic",exception.getMessage());
+          if(isValidMessage(msg)) {
+              result = employeeDetailsService.sendMessage(msg);
+              return ResponseEntity.status(HttpStatus.OK)
+                      .body("Message Saved to data base \n"+result);
+          }else {
+              return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                      .body("please enter valid details");
+          }
+       } catch (EmployeeNotFoundException | JsonProcessingException | NoSuchFieldException exception) {
+           logger.error("Exception {}",exception.getMessage());
+           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
+       }catch (Exception e){
+           logger.error("Exception {} while Producing a message to topic",e.getMessage());
            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Message was not sent to topic");
        }
-       return ResponseEntity.status(HttpStatus.OK).body("Message Saved to data base \n"+result);
+
     }
+
+    private boolean isValidMessage(String msg) throws JsonProcessingException, NoSuchFieldException {
+        ObjectMapper objectMapper=new ObjectMapper();
+        EmployeePayLoadDTO employeePayLoadDTO = objectMapper
+                .readValue(msg, EmployeePayLoadDTO.class);
+                if (!StringUtils.isEmpty(employeePayLoadDTO.getEmpId())) {
+                    if (StringUtils.isNotBlank(employeePayLoadDTO.getFirstName())) {
+                        StringUtils.isNotBlank(employeePayLoadDTO.getDepartment());
+                    }else {
+                        throw new NoSuchFieldException("please Enter FirstName/Department");
+                    }
+                }else {
+                    throw new EmployeeNotFoundException("Employee not found ,please Enter valid EmpId");
+                }
+                return true;
+    }
+
     @Operation(summary = "Save Employees", description = "saves Employees into Data Base")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully saved to database"),

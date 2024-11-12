@@ -15,5 +15,6 @@ public class EmployeeInfoDTO {
     private String empId;
     private String firstName;
     private  String lastName;
+    private String department;
     private List<EmployeeSkillInfoDTO> employeeSkills;
 }

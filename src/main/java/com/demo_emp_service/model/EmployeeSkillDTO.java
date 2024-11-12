@@ -20,6 +20,4 @@ public class EmployeeSkillDTO {
 
     @NotNull(message = "skillLevel cannot be null")
     private String skillLevel;
-
-   // private String empId;
 }
